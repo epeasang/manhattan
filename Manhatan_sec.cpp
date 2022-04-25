@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
+#include <cmath>
 
 void initialize(int *m,int t,int maximo)
 {
@@ -75,23 +76,43 @@ numeros -> Lista de números de los que se buscarán las distancias
 distancias -> Resultado con las distancias (un resultado por número)
 */
 
-struct posicion{
-	int x;
-	int y;
-	int valor;
-};
-void sec(int N,int *A,int n,int *numeros,int *distancias) {
+int calcularDistancia(int i, int j, int posx, int posy)
+{
+	return abs(i-posx) + abs(j-posy);
+}
+
+void buscarse(int *numeros, int index, int posx, int posy, int *distancias, int N, int *A)
+{
+	for (int i = posx; i < N; ++i)
+	{
+		for (int j = 0; j < N; ++j)
+		{
+			if (A[i*N + j] == numeros[index])
+			{
+				int distancia = calcularDistancia(i, j, posx, posy);
+				if (distancia > distancias[index])
+				{
+					distancias[index] = distancia;
+				}
+			}
+		}
+	}
+}
+
+
+
+
+void sec(int N,int *A,int n,int *numeros,int *distancias)
+{
 	for (int i = 0; i < n; ++i)
 	{
-		for (int i = 0; i < N; ++i)
+		for (int j = 0; j < N; ++j)
 		{
-			for (int j = 0; j < N; ++j)
+			for (int k = 0; k < N; ++k)
 			{
-				if (numeros[i] == A[i][j])
+				if (A[j*N + k] == numeros[i])
 				{
-					posicion->x = i;
-					posicion->y = j;
-					posicion->valor = A[i][j];
+					buscarse(numeros,i,j,k, distancias, N, A);
 				}
 			}
 		}
