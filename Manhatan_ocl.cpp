@@ -421,7 +421,45 @@ workitems_por_workgroups -> Número de work items que se lanzarán en cada work gr
 */
 void ocl(int N,int *A,int n,int *numeros,int *distancias, EntornoOCL_t entorno, int num_workitems, int workitems_por_workgroups) 
 {
+	cl_mem buff_out, buff_in, buff_matriz;
+	cl_int error;
+	cl_event Evento;
+	size_t NumWI = num_workitems;
 
+	int *host =  new int [NumWI];
+	/*
+	int* aux = new int[columnas*(columnas+1)];
+
+	for(int i = 0; i < columnas*(columnas+1);i++){
+		aux[i]=m[i];
+	}
+	*/
+
+ 	buff_out = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR, numeros*sizeof(int), distancias, &error);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+	buff_matriz = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR, (N*N)*sizeof(int), A, &error);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+	buff_in = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR, n*sizeof(int), numeros, &error);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+
+
+	error=clSetKernelArg(entorno.kernel,0,sizeof(cl_mem),&buff_in);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+
+	error=clSetKernelArg(entorno.kernel,1,sizeof(cl_mem),&buff_out);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+
+	error=clSetKernelArg(entorno.kernel,2,sizeof(cl_mem),&buff_matriz);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+
+	error = clEnqueueNDRangeKernel(entorno.cola, entorno.kernel, 1, NULL, &NumWI, NULL, 0, NULL, &Evento);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}	
+
+	printf("Distancias: ");
+	error=clFinish(entorno.cola);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+
+	return CL_SUCCESS;
 }
 // **************************************************************************
 // *************************** FIN IMPLEMENTACIÓN ***************************
