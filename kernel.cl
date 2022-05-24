@@ -25,17 +25,18 @@ void buscarse(__global int *numeros, int index, int posx, int posy,__global int 
 
 __kernel void Manhattan(int N,__global int *A,int n,__global int *numeros,__global int *distancias)
 {
-	int total = N/get_global_size(0);
+	int total = n/get_global_size(0);
 	size_t id= get_global_id(0);
 
 
-	for (int i = id*total*N; i < (id+1)*total*N; i+=N)
+	for (int i = id*total; i < (id+1)*total; i++)
 	{
+		distancias[i]=0;
 		for (int j = 0; j < N; ++j)
 		{
 			for (int k = 0; k < N; ++k)
 			{
-				if (A[j*N + k] == numeros[i/N])
+				if (A[j*N + k] == numeros[i])
 				{
 					buscarse(numeros,i,j,k, distancias, N, A);
 				}

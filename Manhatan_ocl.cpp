@@ -336,7 +336,7 @@ cl_int CrearPrograma(cl_program &program, cl_context context,cl_uint num_devices
     }
     error=clBuildProgram(program, num_devices,device_list, options, NULL,NULL);
     if (error!=CL_SUCCESS){
-        if(error = CL_BUILD_PROGRAM_FAILURE){
+        if(error == CL_BUILD_PROGRAM_FAILURE){
             error=clGetProgramBuildInfo(program, device_list[0], CL_PROGRAM_BUILD_LOG, 20000, CompLog, NULL);
             if (error!=CL_SUCCESS){
                 CodigoError(error);
@@ -368,7 +368,7 @@ cl_int InicializarEntornoOCL(EntornoOCL_t *entorno)
 	
 	CrearPrograma(entorno->programa, entorno->contexto, num_dispositivos, entorno->dispositivos, "", "kernel.cl");
 	
-	entorno->kernel = clCreateKernel(entorno->programa, "Manhatan", &error);
+	entorno->kernel = clCreateKernel(entorno->programa, "Manhattan", &error);
 	if (error != CL_SUCCESS){
 		CodigoError(error);
 		return error;
@@ -419,37 +419,34 @@ entorno -> Entorno OpenCL
 num_workitems -> Número de work items que se usarán para lanzar el kernel. Es opcional, se puede usar o no dentro de la función
 workitems_por_workgroups -> Número de work items que se lanzarán en cada work group. Es opcional, se puede usar o no dentro de la función
 */
-void ocl(int N,int *A,int n,int *numeros,int *distancias, EntornoOCL_t entorno, int num_workitems, int workitems_por_workgroups) 
+cl_int ocl(int N,int *A,int n,int *numeros,int *distancias, EntornoOCL_t entorno, int num_workitems, int workitems_por_workgroups) 
 {
 	cl_mem buff_out, buff_in, buff_matriz;
 	cl_int error;
 	cl_event Evento;
 	size_t NumWI = num_workitems;
 
-	int *host =  new int [NumWI];
-	/*
-	int* aux = new int[columnas*(columnas+1)];
-
-	for(int i = 0; i < columnas*(columnas+1);i++){
-		aux[i]=m[i];
-	}
-	*/
-
- 	buff_out = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR, numeros*sizeof(int), distancias, &error);
+ 	buff_out = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR,sizeof(int*), distancias, &error);
     if (error!=CL_SUCCESS){CodigoError(error);return error;}
-	buff_matriz = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR, (N*N)*sizeof(int), A, &error);
+	buff_matriz = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR, sizeof(int*), A, &error);
     if (error!=CL_SUCCESS){CodigoError(error);return error;}
-	buff_in = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR, n*sizeof(int), numeros, &error);
+	buff_in = clCreateBuffer(entorno.contexto, CL_MEM_USE_HOST_PTR, sizeof(int*), numeros, &error);
     if (error!=CL_SUCCESS){CodigoError(error);return error;}
 
 
-	error=clSetKernelArg(entorno.kernel,0,sizeof(cl_mem),&buff_in);
+	error=clSetKernelArg(entorno.kernel,3,sizeof(cl_mem),&buff_in);
     if (error!=CL_SUCCESS){CodigoError(error);return error;}
 
-	error=clSetKernelArg(entorno.kernel,1,sizeof(cl_mem),&buff_out);
+	error=clSetKernelArg(entorno.kernel,4,sizeof(cl_mem),&buff_out);
     if (error!=CL_SUCCESS){CodigoError(error);return error;}
 
-	error=clSetKernelArg(entorno.kernel,2,sizeof(cl_mem),&buff_matriz);
+	error=clSetKernelArg(entorno.kernel,1,sizeof(cl_mem),&buff_matriz);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+
+  error=clSetKernelArg(entorno.kernel,0,sizeof(int),&N);
+    if (error!=CL_SUCCESS){CodigoError(error);return error;}
+
+  error=clSetKernelArg(entorno.kernel,2,sizeof(int),&n);
     if (error!=CL_SUCCESS){CodigoError(error);return error;}
 
 	error = clEnqueueNDRangeKernel(entorno.cola, entorno.kernel, 1, NULL, &NumWI, NULL, 0, NULL, &Evento);

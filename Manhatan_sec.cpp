@@ -106,6 +106,7 @@ void sec(int N,int *A,int n,int *numeros,int *distancias)
 {
 	for (int i = 0; i < n; ++i)
 	{
+		distancias[i]=0;
 		for (int j = 0; j < N; ++j)
 		{
 			for (int k = 0; k < N; ++k)
